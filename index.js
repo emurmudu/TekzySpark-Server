@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectID, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5001;
 
@@ -29,25 +29,54 @@ async function run() {
         await client.connect();
 
         const productCollection = client.db('productDB').collection('product');
+        const userCollection = client.db('productDB').collection('user');
 
-        // app.get('/product', async (req, res) => {
-        //     const cursor = productCollection.find();
-        //     const result = await cursor.toArray();
-        //     res.send(result);
-        // })
-
+        app.get('/product', async (req, res) => {
+            const cursor = productCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
 
         app.get('/product/:brand', async (req, res) => {
-            try {
-                const { brand } = req.params;
-                const cursor = productCollection.find({ brand: brand });
-                const result = await cursor.toArray();
-                res.json(result);
-            } catch (error) {
-                console.error('Error fetching products by brand:', error);
-                res.status(500).json({ error: 'Internal Server Error' });
-            }
+            const { brand } = req.params;
+            const cursor = productCollection.find({ brand: brand });
+            const result = await cursor.toArray();
+            res.json(result);
+            // res.send(result);
         });
+
+
+        app.get('/product/:brandName', async (req, res) => {
+            const { brandName } = req.params;
+            const cursor = productCollection.find({ brand: brandName });
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
+
+        app.get('/productById/:id', async (req, res) => {
+            const productId = req.params.id;
+            const product = await productCollection.findOne({ _id: new ObjectId(productId) });
+
+            if (!product) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+
+            res.json(product);
+        });
+
+
+
+        // user related api 
+
+        app.post('/user', async (req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
+
+
 
 
         app.post('/product', async (req, res) => {

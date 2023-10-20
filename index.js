@@ -30,11 +30,24 @@ async function run() {
 
         const productCollection = client.db('productDB').collection('product');
 
-        app.get('/product', async (req, res) => {
-            const cursor = productCollection.find();
-            const result = await cursor.toArray();
-            res.send(result);
-        })
+        // app.get('/product', async (req, res) => {
+        //     const cursor = productCollection.find();
+        //     const result = await cursor.toArray();
+        //     res.send(result);
+        // })
+
+
+        app.get('/product/:brand', async (req, res) => {
+            try {
+                const { brand } = req.params;
+                const cursor = productCollection.find({ brand: brand });
+                const result = await cursor.toArray();
+                res.json(result);
+            } catch (error) {
+                console.error('Error fetching products by brand:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
 
 
         app.post('/product', async (req, res) => {

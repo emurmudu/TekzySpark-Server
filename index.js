@@ -67,6 +67,15 @@ async function run() {
 
 
 
+        app.post('/product', async (req, res) => {
+            const newProduct = req.body;
+            console.log(newProduct);
+            const result = await productCollection.insertOne(newProduct);
+            res.send(result);
+        })
+
+
+
         // user related api 
 
         app.post('/user', async (req, res) => {
@@ -77,14 +86,27 @@ async function run() {
         })
 
 
-
-
-        app.post('/product', async (req, res) => {
-            const newProduct = req.body;
-            console.log(newProduct);
-            const result = await productCollection.insertOne(newProduct);
-            res.send(result);
+        app.get('/user', async (req, res) => {
+            const cursor = userCollection.find();
+            const users = await cursor.toArray();
+            res.send(users);
         })
+
+        app.delete('/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
+            res.send(result)
+        })
+
+        app.patch('/user', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
+
+
 
 
         // Send a ping to confirm a successful connection

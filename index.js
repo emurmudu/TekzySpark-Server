@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient, ServerApiVersion, ObjectID, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5001;
 
@@ -30,6 +30,8 @@ async function run() {
 
         const productCollection = client.db('productDB').collection('product');
         const userCollection = client.db('productDB').collection('user');
+        const cartItemCollection = client.db('productDB').collection('cartItem');
+
 
         app.get('/product', async (req, res) => {
             const cursor = productCollection.find();
@@ -102,11 +104,46 @@ async function run() {
         app.patch('/user', async (req, res) => {
             const user = req.body;
             const filter = { email: user.email };
-            const result = await userCollection.updateOne(filter, updateDoc);
+            const result = await userCollection.updateOne(filter);
             res.send(result)
         })
 
 
+        // Add product on cartItem
+
+        app.post("/addToCart", async (req, res) => {
+
+            const { productId, quantity } = req.body;
+            const userEmail = req.headers["user-email"];
+
+            if (!userEmail) {
+                return res.status(401).json({ error: "Unauthorized" });
+            }
+
+            const existingCartItem = await cartItemCollection.findOne({
+                productId: new ObjectId(productId),
+                userEmail,
+            });
+
+            if (existingCartItem) {
+                existingCartItem.quantity += quantity;
+                await cartItemCollection.updateOne(
+                    { _id: existingCartItem._id },
+                    { $set: { quantity: existingCartItem.quantity } }
+                );
+                res.json(existingCartItem);
+            } else {
+                const newCartItem = {
+                    productId: new ObjectId(productId),
+                    userEmail,
+                    quantity,
+                };
+                const result = await cartItemCollection.insertOne(newCartItem);
+                newCartItem._id = result.insertedId;
+                res.status(201).json(newCartItem);
+            }
+
+        });
 
 
         // Send a ping to confirm a successful connection

@@ -69,6 +69,16 @@ async function run() {
 
 
 
+        //myCart product update:test
+        app.get('/productById/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await cartItemCollection.findOne(query);
+            res.send(result);
+        })
+
+
+
         app.post('/product', async (req, res) => {
             const newProduct = req.body;
             console.log(newProduct);
@@ -92,25 +102,6 @@ async function run() {
             const cursor = userCollection.find();
             const users = await cursor.toArray();
             res.send(users);
-        })
-
-        app.delete('/user/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await userCollection.deleteOne(query);
-            res.send(result)
-        })
-
-        app.patch('/user', async (req, res) => {
-            const user = req.body;
-            const filter = { email: user.email };
-            const updateDoc = {
-                $set: {
-                    lastLoggedAt: user.lastLoggedAt
-                }
-            }
-            const result = await userCollection.updateOne(filter, updateDoc);
-            res.send(result)
         })
 
 
@@ -149,6 +140,8 @@ async function run() {
             }
 
         });
+
+
 
         // get cart on myCart
         app.get("/getCart", async (req, res) => {
@@ -221,35 +214,54 @@ async function run() {
 
 
 
-        app.patch('/updateCartItem/:cartItemId', async (req, res) => {
-            const userEmail = req.headers["user-email"];
-            const cartItemId = req.params.cartItemId;
-            const { quantity } = req.body;
-
-            if (!userEmail) {
-                return res.status(401).json({ error: "Unauthorized" });
-            }
+        // Update product in myCart
+        app.put('/updateProduct/:id', async (req, res) => {
+            const productId = req.params.id;
+            const updatedProduct = req.body;
 
             try {
-                if (!ObjectId.isValid(cartItemId)) {
-                    return res.status(400).json({ error: "Invalid cart item ID" });
-                }
-
-                const result = await cartItemCollection.updateOne(
-                    { _id: new ObjectId(cartItemId), userEmail: userEmail },
-                    { $set: { quantity: quantity } }
+                const result = await productCollection.updateOne(
+                    { _id: new ObjectId(productId) },
+                    { $set: updatedProduct }
                 );
 
-                if (result.matchedCount === 0) {
-                    return res.status(404).json({ error: "Cart item not found" });
+                if (result.modifiedCount === 0) {
+                    return res.status(404).json({ error: 'Product not found' });
                 }
 
-                res.json({ message: "Cart item updated successfully" });
+                res.json({ message: 'Product updated successfully' });
             } catch (error) {
-                console.error("Error updating cart item:", error);
-                res.status(500).json({ error: "Internal Server Error" });
+                console.error('Error updating product:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
             }
         });
+
+
+        app.put('/updateCartItem/:id', async (req, res) => {
+            const cartItemId = req.params.id;
+            const updatedCartItem = req.body;
+
+            try {
+                const result = await cartItemCollection.updateOne(
+                    { _id: new ObjectId(cartItemId) },
+                    { $set: updatedCartItem }
+                );
+
+                if (result.modifiedCount === 0) {
+                    return res.status(404).json({ error: 'Cart item not found' });
+                }
+
+                res.json({ message: 'Cart item updated successfully' });
+            } catch (error) {
+                console.error('Error updating cart item:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
+
+
+
+
 
 
 

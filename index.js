@@ -142,7 +142,6 @@ async function run() {
         });
 
 
-
         // get cart on myCart
         app.get("/getCart", async (req, res) => {
             const userEmail = req.headers["user-email"];
@@ -181,8 +180,7 @@ async function run() {
         });
 
 
-
-
+        //Delete operation
         app.delete("/deleteCartItem/:cartItemId", async (req, res) => {
             const userEmail = req.headers["user-email"];
             const cartItemId = req.params.cartItemId;
@@ -213,7 +211,6 @@ async function run() {
         });
 
 
-
         // Update product in myCart
         app.put('/updateProduct/:id', async (req, res) => {
             const productId = req.params.id;
@@ -235,34 +232,6 @@ async function run() {
                 res.status(500).json({ error: 'Internal Server Error' });
             }
         });
-
-
-        app.put('/updateCartItem/:id', async (req, res) => {
-            const cartItemId = req.params.id;
-            const updatedCartItem = req.body;
-
-            try {
-                const result = await cartItemCollection.updateOne(
-                    { _id: new ObjectId(cartItemId) },
-                    { $set: updatedCartItem }
-                );
-
-                if (result.modifiedCount === 0) {
-                    return res.status(404).json({ error: 'Cart item not found' });
-                }
-
-                res.json({ message: 'Cart item updated successfully' });
-            } catch (error) {
-                console.error('Error updating cart item:', error);
-                res.status(500).json({ error: 'Internal Server Error' });
-            }
-        });
-
-
-
-
-
-
 
 
         // Send a ping to confirm a successful connection
